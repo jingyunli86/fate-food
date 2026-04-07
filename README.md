@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎡 今天吃什么？ – 命运食物转盘
 
-## Getting Started
+> 一个帮助选择困难症用户决定“吃啥”的AI辅助产品演示
 
-First, run the development server:
+## 🔗 快速体验
+[点击打开网站](https://fate-food.vercel.app)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🎯 解决什么问题
+用户在外卖/堂食决策上平均耗时5-10分钟，本工具将决策时间缩短到3秒内。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ 核心功能
+| 功能 | 说明 |
+|------|------|
+| 🎡 命运转盘 | 根据早/午/晚时段自动切换食物池，转动转盘随机推荐 |
+| 🎁 盲盒刮刮乐 | 跨时段随机抽取，刮开涂层查看结果 |
+| 🍔 一键点外卖 | 自动带入食物名称，跳转美团搜索页 |
+| 🚫 防重复机制 | 最近3次推荐的食物不会重复出现 |
+| 🌙 时段主题 | 早/午/晚不同配色，匹配场景氛围 |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🧠 我的产品决策
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 决策1：为什么做“转盘”而不是“随机按钮”？
+- **洞察**：选择困难症的核心是“害怕承担选择后果”
+- **方案**：转盘让结果看起来像“命运决定”，降低用户心理负担
 
-## Learn More
+### 决策2：为什么增加“盲盒刮刮乐”？
+- **洞察**：主玩法（转盘）会有疲劳感
+- **方案**：增加彩蛋玩法，给用户“探索惊喜”的动机
+- **取舍**：放在次要位置，不干扰主流程
 
-To learn more about Next.js, take a look at the following resources:
+### 决策3：“换一个”按钮为什么不自动转盘？
+- **洞察**：用户可能想换玩法（如从转盘换到盲盒）
+- **方案**：点击“换一个”只关闭卡片，让用户自主选择下次玩法
+- **结果**：尊重用户选择权，体验更自由
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 决策4：为什么跳转美团？
+- **数据**：美团在外卖市场份额领先
+- **体验**：美团H5搜索页可直接带入关键词，路径最短
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📅 迭代记录
+| 版本 | 更新内容 |
+|------|---------|
+| v1.0 | 基础转盘功能 + 时段切换 |
+| v1.1 | 增加盲盒刮刮乐玩法 |
+| v1.2 | 修复交互流程：换一回到主界面，用户自主选择 |
+| v1.3 | 增加防重复机制（最近3次不重复） |
 
-## Deploy on Vercel
+## 🔮 下一步规划
+- [ ] 增加“不喜欢”反馈按钮
+- [ ] 增加分享功能（生成今日食物卡片）
+- [ ] 增加简单埋点（记录点外卖转化率）
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠 技术栈
+- Next.js 14 + TypeScript
+- 纯前端静态部署（Vercel）
+- 通过vibe-coding（AI辅助编程）完成
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 👤 关于我
+我是李静云，正在寻找AI产品助理岗位。具备产品思维和AI工具实战能力，能独立完成从需求定义到上线的完整流程。
+📧 邮箱：jingyunli86@gmail.com
+🔗 GitHub：https://github.com/jingyunli86
+
+📧 邮箱：jingyunli86@gmail.com
+🔗 GitHub：https://github.com/jingyunli86
