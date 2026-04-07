@@ -57,8 +57,7 @@
 
 ## 👤 关于我
 我是李静云，正在寻找AI产品助理岗位。具备产品思维和AI工具实战能力，能独立完成从需求定义到上线的完整流程。
-📧 邮箱：jingyunli86@gmail.com
-🔗 GitHub：https://github.com/jingyunli86
+
 
 📧 邮箱：jingyunli86@gmail.com
 🔗 GitHub：https://github.com/jingyunli86
