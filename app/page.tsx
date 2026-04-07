@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-
+// --- 1. 图片数据库：严格对应你的 public/food 文件夹 ---
 const foodImageDatabase: Record<string, string> = {
   "台式卤肉饭": "/food/luroufan.png",
   "东北菜": "/food/dongbeicai.png",
@@ -10,7 +10,7 @@ const foodImageDatabase: Record<string, string> = {
   "麻辣烫": "/food/malatang.png",
   "汉堡": "/food/hanbao.png",
   "饭团": "/food/fantuan.png",
-  "手抓饼": "/food/shouzhuabing.png", // 修正：对应你文件夹里的 shouzhapng.png
+  "手抓饼": "/food/shouzhuabing.png", 
   "煎饼果子": "/food/jianbingguozi.png",
   "胡辣汤": "/food/hulatang.png",
   "豆浆油条": "/food/doujiangyoutiao.png",
@@ -26,9 +26,9 @@ const foodImageDatabase: Record<string, string> = {
   "烤鱼": "/food/kaoyu.png",
   "砂锅": "/food/shaguo.png",
   "咖喱饭": "/food/galifan.png",
-  "拉面": "/food/lamian.png"}
+  "拉面": "/food/lamian.png" 
+};
 
-// --- 2. 配置信息 ---
 const config = {
   brk: { options: ["豆浆油条", "小笼包", "三明治", "麦芬", "饭团", "手抓饼", "煎饼果子", "胡辣汤"] },
   lun: { options: ["台式卤肉饭", "东北菜", "寿司", "黄焖鸡", "麻辣烫", "拉面", "螺蛳粉", "汉堡"] },
@@ -36,7 +36,6 @@ const config = {
 };
 
 export default function FateFood() {
-  // --- 3. 状态定义：解决所有 Cannot find name 报错 ---
   const [meal, setMeal] = useState<'brk' | 'lun' | 'din'>('lun');
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedFood, setSelectedFood] = useState("");
@@ -45,28 +44,29 @@ export default function FateFood() {
   const [showScratch, setShowScratch] = useState(false);
   const [scratchImage, setScratchImage] = useState("");
 
+  // ✅ 修复 1：美团跳转链接改为更通用的 H5 接口，解决 AppKey 报错
   const getDeliveryUrl = (food: string) => {
-    return `https://i.meituan.com/s/${encodeURIComponent(food)}`;
+    return `https://i.meituan.com/s/?w=${encodeURIComponent(food)}`;
   };
 
-  // --- 4. 转盘逻辑 ---
   const spin = () => {
     if (isSpinning) return;
-    
     const currentOptions = config[meal].options;
-    const randomDeg = Math.floor(Math.random() * 360) + 2000;
-    const newTotalDeg = totalDeg + randomDeg; // 累加角度实现顺滑旋转
+    const randomDeg = Math.floor(Math.random() * 360) + 3600; // 增加圈数，更稳健
+    const newTotalDeg = totalDeg + randomDeg;
     
     setTotalDeg(newTotalDeg);
     setIsSpinning(true);
     setShowCard(false);
+    setShowScratch(false);
 
     setTimeout(() => {
       setIsSpinning(false);
       const actualDeg = newTotalDeg % 360;
       const sectorDeg = 360 / currentOptions.length;
-      let winningIndex = Math.floor((360 - actualDeg + 270) % 360 / sectorDeg);
-      const foodName = currentOptions[winningIndex];
+      // 算法修正：考虑指针位置
+      let winningIndex = Math.floor((360 - actualDeg + (sectorDeg / 2)) % 360 / sectorDeg);
+      const foodName = currentOptions[winningIndex % currentOptions.length];
       
       setSelectedFood(foodName);
       setScratchImage(foodImageDatabase[foodName] || "/food/default.png");
@@ -74,52 +74,55 @@ export default function FateFood() {
     }, 4000);
   };
 
-  // --- 5. 盲盒逻辑 ---
-  const openMysteryBox = () => {
-    if (isSpinning) return;
-    setIsSpinning(true);
-    setShowCard(false);
-    const allOptions = [...config.brk.options, ...config.lun.options, ...config.din.options];
-    const luckyPick = allOptions[Math.floor(Math.random() * allOptions.length)];
-
-    setTimeout(() => {
-      setIsSpinning(false);
-      setSelectedFood(luckyPick);
-      setScratchImage(foodImageDatabase[luckyPick] || "/food/default.png");
-      setShowScratch(true); 
-    }, 800);
-  };
-
   return (
-    <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#fdfdfd', minHeight: '100vh' }}>
+    <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#fdfdfd', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+      {/* 顶部切换按钮 */}
       <div style={{ marginBottom: '20px' }}>
         {(['brk', 'lun', 'din'] as const).map(m => (
-          <button key={m} onClick={() => {setMeal(m); setTotalDeg(0);}} style={{ margin: '5px', padding: '8px 15px', borderRadius: '15px', border: 'none', backgroundColor: meal === m ? '#FFD161' : '#eee' }}>
+          <button 
+            key={m} 
+            onClick={() => {setMeal(m); setTotalDeg(0); setShowCard(false);}} 
+            style={{ 
+              margin: '5px', padding: '10px 20px', borderRadius: '20px', border: 'none', 
+              cursor: 'pointer', fontWeight: 'bold',
+              backgroundColor: meal === m ? '#FFD161' : '#eee',
+              color: meal === m ? '#000' : '#666'
+            }}
+          >
             {m === 'brk' ? '早餐' : m === 'lun' ? '午餐' : '晚餐'}
           </button>
         ))}
       </div>
 
-      <h1>{meal === 'lun' ? '午餐' : meal === 'brk' ? '早餐' : '晚餐'}吃啥？</h1>
+      <h1 style={{ color: '#333' }}>今天{meal === 'lun' ? '午餐' : meal === 'brk' ? '早餐' : '晚餐'}吃啥？</h1>
 
-      {/* 修复 1：动态渲染带文字的转盘 */}
-      <div style={{ position: 'relative', width: '320px', height: '320px', margin: '40px auto' }}>
+      {/* ✅ 修复 2：转盘文字渲染逻辑优化 */}
+      <div style={{ position: 'relative', width: '340px', height: '340px', margin: '40px auto' }}>
+        {/* 指针 */}
+        <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', fontSize: '40px', zIndex: 10 }}>📍</div>
+        
+        {/* 转盘主体 */}
         <div style={{ 
-          width: '100%', height: '100%', borderRadius: '50%', border: '8px solid #FFD161',
-          position: 'relative', overflow: 'hidden', transition: 'transform 4s cubic-bezier(0.1, 0, 0.1, 1)',
-          transform: `rotate(${totalDeg}deg)`, backgroundColor: '#fff'
+          width: '100%', height: '100%', borderRadius: '50%', border: '10px solid #FFD161',
+          position: 'relative', overflow: 'hidden', backgroundColor: '#fff',
+          transition: 'transform 4s cubic-bezier(0.1, 0, 0.1, 1)',
+          transform: `rotate(${totalDeg}deg)`,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
         }}>
           {config[meal].options.map((option, i) => {
-            const angle = 360 / config[meal].options.length;
+            const count = config[meal].options.length;
+            const angle = 360 / count;
             return (
               <div key={i} style={{
-                position: 'absolute', width: '50%', height: '2px', backgroundColor: '#FFD161',
+                position: 'absolute', width: '50%', height: '1px', backgroundColor: '#FFD161',
                 top: '50%', left: '50%', transformOrigin: 'left center',
-                transform: `rotate(${i * angle}deg)`
+                transform: `rotate(${i * angle - 90}deg)` // 调整起始位置
               }}>
                 <span style={{ 
-                  position: 'absolute', left: '40px', top: '-10px', width: '100px',
-                  transform: `rotate(${angle / 2}deg)`, fontSize: '14px', fontWeight: 'bold'
+                  position: 'absolute', left: '30px', top: '0', width: '120px', textAlign: 'right',
+                  transform: `rotate(${angle / 2}deg) translateY(-50%)`, // 文字居中
+                  fontSize: '14px', fontWeight: 'bold', color: '#444',
+                  display: 'block', paddingRight: '10px'
                 }}>
                   {option}
                 </span>
@@ -127,39 +130,40 @@ export default function FateFood() {
             );
           })}
         </div>
-        <div style={{ position: 'absolute', top: '-25px', left: '50%', transform: 'translateX(-50%)', fontSize: '40px', zIndex: 10 }}>📍</div>
       </div>
 
-      <button onClick={spin} disabled={isSpinning} style={{ padding: '15px 40px', fontSize: '18px', borderRadius: '30px', backgroundColor: '#FFD161', border: 'none', fontWeight: 'bold' }}>开始抽取</button>
+      <button 
+        onClick={spin} 
+        disabled={isSpinning} 
+        style={{ 
+          padding: '15px 50px', fontSize: '20px', borderRadius: '40px', 
+          backgroundColor: '#FFD161', border: 'none', fontWeight: 'bold',
+          cursor: isSpinning ? 'not-allowed' : 'pointer',
+          boxShadow: '0 4px 0 #e6b800'
+        }}
+      >
+        {isSpinning ? '旋转中...' : '开始抽取'}
+      </button>
 
-      {/* 结果弹窗 */}
+      {/* 结果卡片 */}
       {showCard && (
         <div style={{ 
           position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          background: 'white', padding: '40px', borderRadius: '30px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-          zIndex: 1000, width: '320px'
+          background: 'white', padding: '30px', borderRadius: '30px', 
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)', zIndex: 1000, width: '300px'
         }}>
-          <h3 style={{ margin: '0 0 20px' }}>🎉 今天的幸运选择：</h3>
+          <h3 style={{ margin: '0 0 15px', color: '#666' }}>🎉 结果是：</h3>
+          <h2 style={{ fontSize: '32px', color: '#FFD161', margin: '10px 0' }}>{selectedFood}</h2>
           <img 
             src={scratchImage} 
             alt={selectedFood} 
-            style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '20px', marginBottom: '20px' }}
+            style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '20px', margin: '10px 0' }}
             onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"; }}
           />
-          <h2 style={{ fontSize: '28px', color: '#FFD161' }}>{selectedFood}</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
-            <button onClick={() => setShowCard(false)} style={{ padding: '12px', borderRadius: '20px', border: 'none', background: '#FFD161', color: 'white', fontWeight: 'bold' }}>确定</button>
-            <button onClick={() => window.open(getDeliveryUrl(selectedFood), '_blank')} style={{ padding: '12px', borderRadius: '20px', border: '1px solid #FFD161', background: 'none' }}>去点美团外卖</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '15px' }}>
+            <button onClick={() => window.open(getDeliveryUrl(selectedFood), '_blank')} style={{ padding: '12px', borderRadius: '25px', border: 'none', background: '#FFD161', color: '#000', fontWeight: 'bold', cursor: 'pointer' }}>去美团点外卖</button>
+            <button onClick={() => setShowCard(false)} style={{ padding: '10px', borderRadius: '25px', border: 'none', background: '#f0f0f0', color: '#666', cursor: 'pointer' }}>关闭</button>
           </div>
-        </div>
-      )}
-
-      {showScratch && !showCard && (
-        <div 
-          onClick={() => { setShowScratch(false); setShowCard(true); }} 
-          style={{ cursor: 'pointer', background: '#FFF3D6', padding: '30px', borderRadius: '20px', marginTop: '20px', border: '2px dashed #FFD161' }}
-        >
-          🎁 点击打开盲盒，看看是什么！
         </div>
       )}
     </div>
