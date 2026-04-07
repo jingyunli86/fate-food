@@ -46,7 +46,7 @@ export default function FateFood() {
   const [scratchImage, setScratchImage] = useState("");
 
   const getDeliveryUrl = (food: string) => {
-    return `https://s.meituan.com/search?q=${encodeURIComponent(food)}`;
+    return `https://i.meituan.com/s/${encodeURIComponent(food)}`;
   };
 
   // --- 4. 转盘逻辑 ---
