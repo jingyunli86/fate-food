@@ -11,43 +11,6 @@ export default function FateFood() {
   const [progress, setProgress] = useState(0);
   const [showScratch, setShowScratch] = useState(false);
   const [scratchImage, setScratchImage] = useState("");
-  const [showCard, setShowCard] = useState(false);
-  const [selectedFood, setSelectedFood] = useState("");
-  const [lastThreeFoods, setLastThreeFoods] = useState<string[]>([]);
-  const [lastMode, setLastMode] = useState<'wheel' | 'mystery'>('wheel'); // 记录上次玩法
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const config = {
-    brk: { name: '早 A.M.', color: "#FFF9E1", accent: "#222", options: ["麦芬", "便利店饭团", "小笼包", "胡辣汤", "皮蛋瘦肉粥", "煎饼果子", "手抓饼", "三明治"] },
-    lun: { name: '午 P.M.', color: "#FF7F50", accent: "#222", options: ["黄焖鸡", "麻辣烫", "螺蛳粉", "炒饭", "台式卤肉饭", "意式肉酱面", "拉面", "沙县小吃"] },
-    din: { name: '晚 EVE.', color: "#1A1A2E", accent: "#fff", options: ["重庆火锅", "东北菜", "鸭货", "汉堡", "馄饨蒸饺", "韩式炸鸡", "寿司", "冒菜"] }
-  };
-
-  // 根据时段自动切换
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour >= 6 && hour < 10) setMeal('brk');
-    else if (hour >= 10 && hour < 15) setMeal('lun');
-    else setMeal('din');
-  }, []);
-
-  // 绘制转盘
-  useEffect(() => {
-    drawWheel();
-  }, [meal]);
-
-  const getFilteredOptions = (options: string[]) => {
-    return options.filter(opt => !lastThreeFoods.includes(opt));
-  };
-
-  const getRandomFood = (options: string[]) => {
-    const available = getFilteredOptions(options);
-    if (available.length === 0) {
-      setLastThreeFoods([]);
-      return options[Math.floor(Math.random() * options.length)];
-    }
-    return available[Math.floor(Math.random() * available.length)];
-  };
 
   const drawWheel = () => {
     const canvas = canvasRef.current;
@@ -77,35 +40,10 @@ export default function FateFood() {
     });
   };
 
-  const showResultCard = (foodName: string, mode: 'wheel' | 'mystery') => {
-    setSelectedFood(foodName);
-    setScratchImage(`https://images.unsplash.com/featured/400x400?food,${encodeURIComponent(foodName)}&sig=${Math.random()}`);
-    setLastMode(mode);
-    setShowCard(true);
-    
-    setLastThreeFoods(prev => {
-      const newList = [foodName, ...prev].slice(0, 3);
-      return newList;
-    });
-  };
-
-  // 转盘玩法
   const spin = () => {
     if (isSpinning) return;
     setIsSpinning(true);
     setShowCard(false);
-
-    const options = config[meal].options;
-    const selectedFoodName = getRandomFood(options);
-    
-    const extraDeg = Math.floor(Math.random() * 720) + 720;
-    const newRotation = rotation + extraDeg;
-    setRotation(newRotation);
-
-    const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.style.transform = `rotate(${newRotation}deg)`;
-    }
 
     setTimeout(() => {
       setIsSpinning(false);
