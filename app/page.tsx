@@ -71,7 +71,7 @@ export default function FateFood() {
       setSelectedFood(foodName);
       setScratchImage(foodImageDatabase[foodName] || "/food/default.png");
       setShowCard(true);
-    }, 4200);
+    }, 4000);
   };
 
   // --- 5. 盲盒逻辑 ---
@@ -91,43 +91,46 @@ export default function FateFood() {
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '50px', fontFamily: 'sans-serif' }}>
-      <div style={{ marginBottom: '30px' }}>
+    <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#fdfdfd', minHeight: '100vh' }}>
+      <div style={{ marginBottom: '20px' }}>
         {(['brk', 'lun', 'din'] as const).map(m => (
-          <button 
-            key={m} 
-            onClick={() => setMeal(m)} 
-            style={{ 
-              padding: '10px 20px', 
-              margin: '0 5px',
-              backgroundColor: meal === m ? '#FFD161' : '#f0f0f0',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
+          <button key={m} onClick={() => {setMeal(m); setTotalDeg(0);}} style={{ margin: '5px', padding: '8px 15px', borderRadius: '15px', border: 'none', backgroundColor: meal === m ? '#FFD161' : '#eee' }}>
             {m === 'brk' ? '早餐' : m === 'lun' ? '午餐' : '晚餐'}
           </button>
         ))}
       </div>
 
-      <h1 style={{ color: '#333' }}>{meal === 'lun' ? '午餐' : meal === 'brk' ? '早餐' : '晚餐'}吃啥？</h1>
-      
-      {/* 转盘视觉 */}
-      <div style={{ 
-        width: '300px', height: '300px', border: '8px solid #FFD161', borderRadius: '50%',
-        margin: '30px auto', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transform: `rotate(${totalDeg}deg)`, transition: 'transform 4s cubic-bezier(0.1, 0, 0.1, 1)',
-        fontSize: '50px', backgroundColor: '#fff9e6', position: 'relative'
-      }}>
-        🎡
-        <div style={{ position: 'absolute', top: '-20px', fontSize: '30px' }}>📍</div>
+      <h1>{meal === 'lun' ? '午餐' : meal === 'brk' ? '早餐' : '晚餐'}吃啥？</h1>
+
+      {/* 修复 1：动态渲染带文字的转盘 */}
+      <div style={{ position: 'relative', width: '320px', height: '320px', margin: '40px auto' }}>
+        <div style={{ 
+          width: '100%', height: '100%', borderRadius: '50%', border: '8px solid #FFD161',
+          position: 'relative', overflow: 'hidden', transition: 'transform 4s cubic-bezier(0.1, 0, 0.1, 1)',
+          transform: `rotate(${totalDeg}deg)`, backgroundColor: '#fff'
+        }}>
+          {config[meal].options.map((option, i) => {
+            const angle = 360 / config[meal].options.length;
+            return (
+              <div key={i} style={{
+                position: 'absolute', width: '50%', height: '2px', backgroundColor: '#FFD161',
+                top: '50%', left: '50%', transformOrigin: 'left center',
+                transform: `rotate(${i * angle}deg)`
+              }}>
+                <span style={{ 
+                  position: 'absolute', left: '40px', top: '-10px', width: '100px',
+                  transform: `rotate(${angle / 2}deg)`, fontSize: '14px', fontWeight: 'bold'
+                }}>
+                  {option}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ position: 'absolute', top: '-25px', left: '50%', transform: 'translateX(-50%)', fontSize: '40px', zIndex: 10 }}>📍</div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
-        <button onClick={spin} disabled={isSpinning} style={{ padding: '12px 30px', borderRadius: '25px', background: '#FFD161', border: 'none', cursor: 'pointer' }}>开始转盘</button>
-        <button onClick={openMysteryBox} disabled={isSpinning} style={{ padding: '12px 30px', borderRadius: '25px', background: '#eee', border: 'none', cursor: 'pointer' }}>开启盲盒</button>
-      </div>
+      <button onClick={spin} disabled={isSpinning} style={{ padding: '15px 40px', fontSize: '18px', borderRadius: '30px', backgroundColor: '#FFD161', border: 'none', fontWeight: 'bold' }}>开始抽取</button>
 
       {/* 结果弹窗 */}
       {showCard && (
