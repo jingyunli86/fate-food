@@ -282,7 +282,7 @@ export default function FateFood() {
               fontSize: '14px',
               background: meal === m ? '#F5E6D3' : '#FFFFFF',
               color: meal === m ? '#C47A2E' : '#8B7355',
-              boxShadow: meal === m ? '0 2px 8px rgba(196,122,46,0.15)' : '0 2px 4px rgba(0,0,0,0.02)',
+              boxShadow: meal === m ? '0 2px 8px rgba(196,122,46,0.15)' : '0 2px 4px rgba(0,0,0,0.01)',
               border: meal === m ? '1px solid #E8D5B5' : '1px solid #F0E4D0'
             }}
           >
