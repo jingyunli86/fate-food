@@ -26,29 +26,32 @@ const foodImageDatabase: Record<string, string> = {
   "烤鱼": "/food/kaoyu.png",
   "砂锅": "/food/shaguo.png",
   "咖喱饭": "/food/galifan.png",
-  "拉面": "/food/lamian.png",
-  "纯茶": "/food/chaye.png",
-  "抹茶": "/food/mocha.png",
-  "厚乳奶茶": "/food/naicha.png",
-  "特调茶": "/food/tediao.png",
-  "气泡茶": "/food/qipao.png",
-  "爱玛茶": "/food/aima.png"
+  "拉面": "/food/lamian.png"
 };
 
-// 食物配置
+// 食物配置 - 移除 drink 避免类型错误
 const config = {
   brk: { name: "早餐", icon: "☀️", options: ["豆浆油条", "小笼包", "三明治", "麦芬", "饭团", "手抓饼", "煎饼果子", "胡辣汤"] },
   lun: { name: "午餐", icon: "🌞", options: ["台式卤肉饭", "东北菜", "寿司", "黄焖鸡", "麻辣烫", "拉面", "螺蛳粉", "汉堡"] },
   din: { name: "晚餐", icon: "🌙", options: ["火锅", "烧烤", "小龙虾", "披萨", "炸鸡", "烤鱼", "砂锅", "咖喱饭"] },
-  night: { name: "深夜食堂", icon: "✨", options: ["烧烤", "小龙虾", "炸鸡", "泡面", "关东煮", "粥", "馄饨", "饺子"] },
-  drink: { name: "喝什么", icon: "🍵", options: ["纯茶", "抹茶", "厚乳奶茶", "特调茶", "气泡茶", "爱玛茶"] }
+  night: { name: "深夜食堂", icon: "✨", options: ["烧烤", "小龙虾", "炸鸡", "泡面", "关东煮", "粥", "馄饨", "饺子"] }
 };
 
-type MealType = 'brk' | 'lun' | 'din' | 'night' | 'drink';
+type MealType = 'brk' | 'lun' | 'din' | 'night';
 
 // 每餐独立次数记录
 const getMealRemainingKey = (meal: MealType) => `remaining_${meal}`;
 const getMealDateKey = (meal: MealType) => `date_${meal}`;
+
+// 全天所有食物（用于盲盒）
+const getAllFoodOptions = () => {
+  return [
+    ...config.brk.options,
+    ...config.lun.options,
+    ...config.din.options,
+    ...config.night.options
+  ];
+};
 
 export default function FateFood() {
   const [meal, setMeal] = useState<MealType>('lun');
@@ -61,7 +64,7 @@ export default function FateFood() {
   
   // 每餐独立剩余次数
   const [remainingSpins, setRemainingSpins] = useState<Record<MealType, number>>({
-    brk: 2, lun: 2, din: 2, night: 2, drink: 2
+    brk: 2, lun: 2, din: 2, night: 2
   });
   
   // 盲盒剩余次数（每天3次）
@@ -79,13 +82,13 @@ export default function FateFood() {
     if (hour >= 6 && hour < 10) setMeal('brk');
     else if (hour >= 10 && hour < 14) setMeal('lun');
     else if (hour >= 14 && hour < 21) setMeal('din');
-    else if (hour >= 21 || hour < 6) setMeal('night');
+    else setMeal('night');
     
     const today = new Date().toDateString();
     
     // 加载每餐独立次数
-    const newRemaining = { ...remainingSpins };
-    (['brk', 'lun', 'din', 'night', 'drink'] as MealType[]).forEach(m => {
+    const newRemaining = { brk: 2, lun: 2, din: 2, night: 2 };
+    (['brk', 'lun', 'din', 'night'] as MealType[]).forEach(m => {
       const savedDate = localStorage.getItem(getMealDateKey(m));
       if (savedDate === today) {
         const saved = localStorage.getItem(getMealRemainingKey(m));
@@ -118,14 +121,8 @@ export default function FateFood() {
     return config[meal].options.filter(opt => !blacklist.includes(opt));
   };
 
-  const getAllFoodOptions = () => {
-    return [
-      ...config.brk.options,
-      ...config.lun.options,
-      ...config.din.options,
-      ...config.night.options,
-      ...config.drink.options
-    ].filter(opt => !blacklist.includes(opt));
+  const getBlindBoxOptions = () => {
+    return getAllFoodOptions().filter(opt => !blacklist.includes(opt));
   };
 
   const spin = () => {
@@ -188,7 +185,11 @@ export default function FateFood() {
 
   const confirmBlindBox = () => {
     setShowBlindBox(false);
-    const allOptions = getAllFoodOptions();
+    const allOptions = getBlindBoxOptions();
+    if (allOptions.length === 0) {
+      alert("🎯 你屏蔽了所有选项，先取消几个吧～");
+      return;
+    }
     const luckyPick = allOptions[Math.floor(Math.random() * allOptions.length)];
     
     setSelectedFood(luckyPick);
@@ -212,17 +213,21 @@ export default function FateFood() {
 
   const resetDaily = () => {
     const today = new Date().toDateString();
-    const newRemaining = { brk: 2, lun: 2, din: 2, night: 2, drink: 2 };
+    const newRemaining = { brk: 2, lun: 2, din: 2, night: 2 };
     setRemainingSpins(newRemaining);
     setBlindBoxRemaining(3);
     setCooldown(0);
-    (['brk', 'lun', 'din', 'night', 'drink'] as MealType[]).forEach(m => {
+    (['brk', 'lun', 'din', 'night'] as MealType[]).forEach(m => {
       localStorage.setItem(getMealRemainingKey(m), '2');
       localStorage.setItem(getMealDateKey(m), today);
     });
     localStorage.setItem('blindBox_remaining', '3');
     localStorage.setItem('blindBox_date', today);
   };
+
+  // 获取当前选项用于转盘显示
+  const currentOptions = getFilteredOptions();
+  const colors = ['#FFF5E6', '#FFF0E0', '#FFEDD5', '#FFE8CC', '#FFE5C5', '#FFE2BF', '#FFDEB8', '#FFDBB2'];
 
   return (
     <div style={{ 
@@ -231,7 +236,7 @@ export default function FateFood() {
       padding: '20px',
       fontFamily: "'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif"
     }}>
-      {/* 顶部状态栏 - 圆角卡片 */}
+      {/* 顶部状态栏 */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -256,7 +261,7 @@ export default function FateFood() {
         </button>
       </div>
 
-      {/* 时段切换 - 圆角卡片 */}
+      {/* 时段切换 */}
       <div style={{
         display: 'flex',
         gap: '10px',
@@ -264,7 +269,7 @@ export default function FateFood() {
         marginBottom: '30px',
         flexWrap: 'wrap'
       }}>
-        {(['brk', 'lun', 'din', 'night', 'drink'] as const).map(m => (
+        {(['brk', 'lun', 'din', 'night'] as const).map(m => (
           <button 
             key={m} 
             onClick={() => {setMeal(m); setTotalDeg(0); setShowCard(false);}} 
@@ -294,7 +299,7 @@ export default function FateFood() {
         {cooldown > 0 ? `⏳ 冷却中 ${cooldown}秒` : '转动转盘，接受命运的安排'}
       </p>
 
-      {/* 转盘区域 - 圆角卡片 */}
+      {/* 转盘区域 */}
       <div style={{
         background: '#FFFFFF',
         borderRadius: '48px',
@@ -305,7 +310,7 @@ export default function FateFood() {
         border: '1px solid #F0E4D0'
       }}>
         <div style={{ position: 'relative', width: '280px', height: '280px', margin: '0 auto' }}>
-          {/* 顶部指针 - 参考图2 */}
+          {/* 顶部指针 */}
           <div style={{ 
             position: 'absolute', 
             top: '-30px', 
@@ -344,10 +349,9 @@ export default function FateFood() {
             boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
             border: '3px solid #E8D5B5'
           }}>
-            {getFilteredOptions().map((option, i) => {
-              const count = getFilteredOptions().length;
+            {currentOptions.map((option, i) => {
+              const count = currentOptions.length;
               const angle = 360 / count;
-              const colors = ['#FFF5E6', '#FFF0E0', '#FFEDD5', '#FFE8CC', '#FFE5C5', '#FFE2BF', '#FFDEB8', '#FFDBB2'];
               return (
                 <div key={i} style={{
                   position: 'absolute',
@@ -394,8 +398,7 @@ export default function FateFood() {
             background: remainingSpins[meal] <= 0 || cooldown > 0 ? '#E8E0D5' : '#F5E6D3',
             color: remainingSpins[meal] <= 0 || cooldown > 0 ? '#B8A088' : '#C47A2E',
             cursor: 'pointer',
-            boxShadow: remainingSpins[meal] <= 0 || cooldown > 0 ? 'none' : '0 4px 12px rgba(196,122,46,0.2)',
-            transition: 'all 0.2s'
+            boxShadow: remainingSpins[meal] <= 0 || cooldown > 0 ? 'none' : '0 4px 12px rgba(196,122,46,0.2)'
           }}
         >
           🎡 转转盘
@@ -420,7 +423,7 @@ export default function FateFood() {
         </button>
       </div>
 
-      {/* 黑名单 - 圆角卡片 */}
+      {/* 黑名单 */}
       <div style={{
         background: '#FFFFFF',
         borderRadius: '32px',
