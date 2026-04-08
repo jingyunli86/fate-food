@@ -276,7 +276,7 @@ export default function FateFood() {
             style={{ 
               padding: '10px 24px',
               borderRadius: '40px',
-              border: 'none',
+              
               cursor: 'pointer',
               fontWeight: '500',
               fontSize: '14px',
