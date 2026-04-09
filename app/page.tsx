@@ -29,7 +29,7 @@ const foodImageDatabase: Record<string, string> = {
   "拉面": "/food/lamian.png"
 };
 
-// 食物配置 - 移除 drink 避免类型错误
+// 食物配置
 const config = {
   brk: { name: "早餐", icon: "☀️", options: ["豆浆油条", "小笼包", "三明治", "麦芬", "饭团", "手抓饼", "煎饼果子", "胡辣汤"] },
   lun: { name: "午餐", icon: "🌞", options: ["台式卤肉饭", "东北菜", "寿司", "黄焖鸡", "麻辣烫", "拉面", "螺蛳粉", "汉堡"] },
@@ -39,11 +39,9 @@ const config = {
 
 type MealType = 'brk' | 'lun' | 'din' | 'night';
 
-// 每餐独立次数记录
 const getMealRemainingKey = (meal: MealType) => `remaining_${meal}`;
 const getMealDateKey = (meal: MealType) => `date_${meal}`;
 
-// 全天所有食物（用于盲盒）
 const getAllFoodOptions = () => {
   return [
     ...config.brk.options,
@@ -62,23 +60,101 @@ export default function FateFood() {
   const [showBlindBox, setShowBlindBox] = useState(false);
   const [scratchImage, setScratchImage] = useState("");
   
-  // 每餐独立剩余次数
   const [remainingSpins, setRemainingSpins] = useState<Record<MealType, number>>({
     brk: 2, lun: 2, din: 2, night: 2
   });
   
-  // 盲盒剩余次数（每天3次）
   const [blindBoxRemaining, setBlindBoxRemaining] = useState(3);
-  
   const [cooldown, setCooldown] = useState(0);
   const [showPromise, setShowPromise] = useState(false);
   const [blacklist, setBlacklist] = useState<string[]>([]);
-  const [customBlacklist, setCustomBlacklist] = useState<string[]>([]);  // 新增：自定义黑名单
-const [newBlacklistItem, setNewBlacklistItem] = useState('');     
+  const [customBlacklist, setCustomBlacklist] = useState<string[]>([]);
+  const [newBlacklistItem, setNewBlacklistItem] = useState('');     
   const [foodHistory, setFoodHistory] = useState<string[]>([]);
   const [achievements, setAchievements] = useState<string[]>([]);
 
-  // 初始化：加载各餐次数
+  const colors = ['#FFF5E6', '#FFF0E0', '#FFEDD5', '#FFE8CC', '#FFE5C5', '#FFE2BF', '#FFDEB8', '#FFDBB2'];
+
+  // 获取过滤后的选项
+  const getFilteredOptions = () => {
+    const allBlacklist = [...blacklist, ...customBlacklist];
+    return config[meal].options.filter(opt => !allBlacklist.includes(opt));
+  };
+  
+  const getBlindBoxOptions = () => {
+    const allBlacklist = [...blacklist, ...customBlacklist];
+    return getAllFoodOptions().filter(opt => !allBlacklist.includes(opt));
+  };
+
+  const currentOptions = getFilteredOptions();
+
+  // Canvas绘制转盘
+  useEffect(() => {
+    const canvas = document.getElementById('wheelCanvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const options = getFilteredOptions();
+    const count = options.length;
+    if (count === 0) return;
+    
+    const angle = (Math.PI * 2) / count;
+    const centerX = 140;
+    const centerY = 140;
+    const radius = 140;
+    
+    ctx.clearRect(0, 0, 280, 280);
+    
+    for (let i = 0; i < count; i++) {
+      const startAngle = i * angle;
+      const endAngle = (i + 1) * angle;
+      
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.fill();
+      ctx.strokeStyle = '#E8D5B5';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      const textAngle = startAngle + angle / 2;
+      const textRadius = radius * 0.65;
+      const x = centerX + Math.cos(textAngle) * textRadius;
+      const y = centerY + Math.sin(textAngle) * textRadius;
+      
+      const text = options[i];
+      const chars = text.split('');
+      
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(textAngle + Math.PI / 2);
+      ctx.fillStyle = '#A0784A';
+      ctx.font = 'bold 14px "PingFang SC", "Microsoft YaHei"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      const lineHeight = 18;
+      const startY = -((chars.length - 1) * lineHeight) / 2;
+      chars.forEach((char, idx) => {
+        ctx.fillText(char, 0, startY + idx * lineHeight);
+      });
+      
+      ctx.restore();
+    }
+    
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 25, 0, Math.PI * 2);
+    ctx.fillStyle = '#F5E6D3';
+    ctx.fill();
+    ctx.strokeStyle = '#E8D5B5';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }, [meal, blacklist, customBlacklist]);
+
+  // 初始化
   useEffect(() => {
     const hour = new Date().getHours();
     if (hour >= 6 && hour < 10) setMeal('brk');
@@ -87,13 +163,12 @@ const [newBlacklistItem, setNewBlacklistItem] = useState('');
     else setMeal('night');
     
     const today = new Date().toDateString();
-    // 加载黑名单
-const savedBlacklist = localStorage.getItem('blacklist');
-if (savedBlacklist) setBlacklist(JSON.parse(savedBlacklist));
-const savedCustomBlacklist = localStorage.getItem('customBlacklist');
-if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
     
-    // 加载每餐独立次数
+    const savedBlacklist = localStorage.getItem('blacklist');
+    if (savedBlacklist) setBlacklist(JSON.parse(savedBlacklist));
+    const savedCustomBlacklist = localStorage.getItem('customBlacklist');
+    if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
+    
     const newRemaining = { brk: 2, lun: 2, din: 2, night: 2 };
     (['brk', 'lun', 'din', 'night'] as MealType[]).forEach(m => {
       const savedDate = localStorage.getItem(getMealDateKey(m));
@@ -108,7 +183,6 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
     });
     setRemainingSpins(newRemaining);
     
-    // 加载盲盒次数
     const blindDate = localStorage.getItem('blindBox_date');
     if (blindDate === today) {
       const savedBlind = localStorage.getItem('blindBox_remaining');
@@ -121,19 +195,7 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
   }, []);
 
   const getDeliveryUrl = (food: string) => {
-    // 使用美团主站搜索，更稳定
     return `https://www.meituan.com/s?w=${encodeURIComponent(food)}`;
-  };
-
-  const getFilteredOptions = () => {
-    // 过滤：预设黑名单 + 自定义黑名单
-    const allBlacklist = [...blacklist, ...customBlacklist];
-    return config[meal].options.filter(opt => !allBlacklist.includes(opt));
-  };
-  
-  const getBlindBoxOptions = () => {
-    const allBlacklist = [...blacklist, ...customBlacklist];
-    return getAllFoodOptions().filter(opt => !allBlacklist.includes(opt));
   };
 
   const spin = () => {
@@ -171,7 +233,6 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
       setSelectedFood(foodName);
       setScratchImage(foodImageDatabase[foodName] || "/food/default.png");
       
-      // 扣减次数
       const newRemaining = { ...remainingSpins };
       newRemaining[meal] = remainingSpins[meal] - 1;
       setRemainingSpins(newRemaining);
@@ -257,9 +318,6 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
     localStorage.setItem('blindBox_remaining', '3');
     localStorage.setItem('blindBox_date', today);
   };
-  // 获取当前选项用于转盘显示
-  const currentOptions = getFilteredOptions();
-  const colors = ['#FFF5E6', '#FFF0E0', '#FFEDD5', '#FFE8CC', '#FFE5C5', '#FFE2BF', '#FFDEB8', '#FFDBB2'];
 
   return (
     <div style={{ 
@@ -308,7 +366,6 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
             style={{ 
               padding: '10px 24px',
               borderRadius: '40px',
-              
               cursor: 'pointer',
               fontWeight: '500',
               fontSize: '14px',
@@ -331,7 +388,7 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
         {cooldown > 0 ? `⏳ 冷却中 ${cooldown}秒` : '转动转盘，接受命运的安排'}
       </p>
 
-      {/* 转盘区域 */}
+      {/* 转盘区域 - Canvas版本 */}
       <div style={{
         background: '#FFFFFF',
         borderRadius: '48px',
@@ -368,54 +425,21 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
             zIndex: 11
           }} />
           
-          {/* 转盘 */}
-          <div style={{ 
-            width: '100%', 
-            height: '100%', 
-            borderRadius: '50%', 
-            position: 'relative',
-            overflow: 'hidden',
-            backgroundColor: '#FFF9F0',
-            transition: 'transform 4s cubic-bezier(0.2, 0.9, 0.3, 1.1)',
-            transform: `rotate(${totalDeg}deg)`,
-            boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
-            border: '3px solid #E8D5B5'
-          }}>
-        {currentOptions.map((option, i) => {
-  const count = currentOptions.length;
-  const angle = 360 / count;
-  // 关键修复：每个扇区的文字应该旋转到扇区中间，而不是固定角度
-  const textRotate = i * angle + angle / 2;
-  
-  return (
-    <div key={i} style={{
-      position: 'absolute',
-      width: '50%',
-      height: '50%',
-      left: '50%',
-      top: '50%',
-      transformOrigin: '0% 0%',
-      transform: `rotate(${i * angle}deg)`,
-      background: colors[i % colors.length],
-      clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%, 0% 100%)'
-    }}>
-      <div style={{
-        position: 'absolute',
-        left: '60%',      // 调整文字位置
-        top: '20%',
-        transform: `rotate(${textRotate}deg)`,  // 改为动态旋转
-        fontSize: '10px',
-        fontWeight: '600',
-        color: '#A0784A',
-        whiteSpace: 'nowrap',
-        textShadow: '0 1px 0 rgba(255,255,255,0.5)'
-      }}>
-        {option}
-      </div>
-    </div>
-  );
-})}
-          </div>
+          {/* Canvas转盘 */}
+          <canvas
+            id="wheelCanvas"
+            width="280"
+            height="280"
+            style={{
+              width: '280px',
+              height: '280px',
+              borderRadius: '50%',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+              border: '3px solid #E8D5B5',
+              transition: 'transform 4s cubic-bezier(0.2, 0.9, 0.3, 1.1)',
+              transform: `rotate(${totalDeg}deg)`
+            }}
+          />
         </div>
       </div>
 
@@ -457,154 +481,153 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
           🎁 盲盒 ({blindBoxRemaining}/3)
         </button>
       </div>
+
       {/* 黑名单 - 增强版 */}
-<div style={{
-  background: '#FFFFFF',
-  borderRadius: '32px',
-  padding: '20px',
-  marginBottom: '20px',
-  boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-  border: '1px solid #F0E4D0'
-}}>
-  <p style={{ color: '#B8956A', fontSize: '13px', marginBottom: '12px', fontWeight: '500' }}>
-    🚫 不想吃什么？点一下屏蔽（食材可多选）
-  </p>
-  
-  {/* 预设标签 */}
-  <div style={{ marginBottom: '16px' }}>
-    <div style={{ fontSize: '12px', color: '#C47A2E', marginBottom: '8px' }}>📌 常见忌口</div>
-    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-      {['香菜', '紫菜', '芹菜', '洋葱', '折耳根', '大蒜'].map(food => (
-        <button
-          key={food}
-          onClick={() => toggleBlacklist(food)}
-          style={{
-            padding: '6px 14px',
-            borderRadius: '40px',
-            border: 'none',
-            background: blacklist.includes(food) ? '#E8D5B5' : '#FFF5E6',
-            color: blacklist.includes(food) ? '#A0784A' : '#C47A2E',
-            fontSize: '12px',
-            cursor: 'pointer',
-            fontWeight: '500',
-            transition: 'all 0.2s'
-          }}
-        >
-          {blacklist.includes(food) ? `✓ ${food}` : food}
-        </button>
-      ))}
-    </div>
-  </div>
-  
-  {/* 当前时段食物屏蔽 */}
-  <div style={{ marginBottom: '16px' }}>
-    <div style={{ fontSize: '12px', color: '#C47A2E', marginBottom: '8px' }}>
-      🍽️ 当前{config[meal].name}选项
-    </div>
-    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-      {config[meal].options.map(food => (
-        <button
-          key={food}
-          onClick={() => toggleBlacklist(food)}
-          style={{
-            padding: '6px 14px',
-            borderRadius: '40px',
-            border: 'none',
-            background: blacklist.includes(food) ? '#E8D5B5' : '#F0E4D0',
-            color: blacklist.includes(food) ? '#A0784A' : '#8B7355',
-            fontSize: '12px',
-            cursor: 'pointer',
-            fontWeight: '500'
-          }}
-        >
-          {blacklist.includes(food) ? `✓ ${food}` : food}
-        </button>
-      ))}
-    </div>
-  </div>
-  
-  {/* 自定义黑名单 */}
-  <div style={{ borderTop: '1px dashed #F0E4D0', paddingTop: '12px' }}>
-    <div style={{ fontSize: '12px', color: '#C47A2E', marginBottom: '8px' }}>
-      ✏️ 自定义屏蔽（输入后永久屏蔽）
-    </div>
-    
-    {/* 已添加的自定义项 */}
-    {customBlacklist.length > 0 && (
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-        {customBlacklist.map(item => (
-          <span
-            key={item}
-            style={{
-              background: '#E8D5B5',
-              padding: '4px 12px',
-              borderRadius: '40px',
-              fontSize: '12px',
-              color: '#A0784A',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            🚫 {item}
-            <button
-              onClick={() => removeCustomBlacklist(item)}
+      <div style={{
+        background: '#FFFFFF',
+        borderRadius: '32px',
+        padding: '20px',
+        marginBottom: '20px',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+        border: '1px solid #F0E4D0'
+      }}>
+        <p style={{ color: '#B8956A', fontSize: '13px', marginBottom: '12px', fontWeight: '500' }}>
+          🚫 不想吃什么？点一下屏蔽（食材可多选）
+        </p>
+        
+        {/* 预设标签 */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '12px', color: '#C47A2E', marginBottom: '8px' }}>📌 常见忌口</div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {['香菜', '紫菜', '芹菜', '洋葱', '折耳根', '大蒜'].map(food => (
+              <button
+                key={food}
+                onClick={() => toggleBlacklist(food)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '40px',
+                  border: 'none',
+                  background: blacklist.includes(food) ? '#E8D5B5' : '#FFF5E6',
+                  color: blacklist.includes(food) ? '#A0784A' : '#C47A2E',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {blacklist.includes(food) ? `✓ ${food}` : food}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* 当前时段食物屏蔽 */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '12px', color: '#C47A2E', marginBottom: '8px' }}>
+            🍽️ 当前{config[meal].name}选项
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {config[meal].options.map(food => (
+              <button
+                key={food}
+                onClick={() => toggleBlacklist(food)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '40px',
+                  border: 'none',
+                  background: blacklist.includes(food) ? '#E8D5B5' : '#F0E4D0',
+                  color: blacklist.includes(food) ? '#A0784A' : '#8B7355',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                {blacklist.includes(food) ? `✓ ${food}` : food}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* 自定义黑名单 */}
+        <div style={{ borderTop: '1px dashed #F0E4D0', paddingTop: '12px' }}>
+          <div style={{ fontSize: '12px', color: '#C47A2E', marginBottom: '8px' }}>
+            ✏️ 自定义屏蔽（输入后永久屏蔽）
+          </div>
+          
+          {customBlacklist.length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              {customBlacklist.map(item => (
+                <span
+                  key={item}
+                  style={{
+                    background: '#E8D5B5',
+                    padding: '4px 12px',
+                    borderRadius: '40px',
+                    fontSize: '12px',
+                    color: '#A0784A',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  🚫 {item}
+                  <button
+                    onClick={() => removeCustomBlacklist(item)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#A0784A',
+                      padding: '0 4px'
+                    }}
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              type="text"
+              value={newBlacklistItem}
+              onChange={(e) => setNewBlacklistItem(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addCustomBlacklist()}
+              placeholder="输入要屏蔽的食物，如：苦瓜"
               style={{
-                background: 'none',
+                flex: 1,
+                padding: '10px 14px',
+                borderRadius: '40px',
+                border: '1px solid #F0E4D0',
+                background: '#FFFCF8',
+                fontSize: '13px',
+                outline: 'none',
+                fontFamily: 'inherit'
+              }}
+            />
+            <button
+              onClick={addCustomBlacklist}
+              style={{
+                padding: '8px 20px',
+                borderRadius: '40px',
                 border: 'none',
+                background: '#F5E6D3',
+                color: '#C47A2E',
+                fontWeight: '500',
                 cursor: 'pointer',
-                fontSize: '14px',
-                color: '#A0784A',
-                padding: '0 4px'
+                fontSize: '13px'
               }}
             >
-              ✕
+              添加
             </button>
-          </span>
-        ))}
+          </div>
+          <p style={{ fontSize: '11px', color: '#B8A088', marginTop: '8px' }}>
+            💡 提示：自定义屏蔽会全局生效，可点击 ✕ 移除
+          </p>
+        </div>
       </div>
-    )}
-    
-    {/* 输入框和添加按钮 */}
-    <div style={{ display: 'flex', gap: '8px' }}>
-      <input
-        type="text"
-        value={newBlacklistItem}
-        onChange={(e) => setNewBlacklistItem(e.target.value)}
-        onKeyPress={(e) => e.key === 'Enter' && addCustomBlacklist()}
-        placeholder="输入要屏蔽的食物，如：苦瓜"
-        style={{
-          flex: 1,
-          padding: '10px 14px',
-          borderRadius: '40px',
-          border: '1px solid #F0E4D0',
-          background: '#FFFCF8',
-          fontSize: '13px',
-          outline: 'none',
-          fontFamily: 'inherit'
-        }}
-      />
-      <button
-        onClick={addCustomBlacklist}
-        style={{
-          padding: '8px 20px',
-          borderRadius: '40px',
-          border: 'none',
-          background: '#F5E6D3',
-          color: '#C47A2E',
-          fontWeight: '500',
-          cursor: 'pointer',
-          fontSize: '13px'
-        }}
-      >
-        添加
-      </button>
-    </div>
-    <p style={{ fontSize: '11px', color: '#B8A088', marginTop: '8px' }}>
-      💡 提示：自定义屏蔽会全局生效，可点击 ✕ 移除
-    </p>
-  </div>
-</div>
 
       {/* 心理契约弹窗 */}
       {showPromise && (
@@ -653,15 +676,14 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
               🍔 去美团下单
             </button>
             <button 
-    onClick={() => {
-      // 复制食物名称到剪贴板
-      navigator.clipboard.writeText(selectedFood);
-      alert(`已复制「${selectedFood}」到剪贴板，可打开外卖App手动搜索`);
-    }} 
-    style={{ padding: '12px', borderRadius: '48px', border: '1px solid #E8D5B5', background: '#FFFFFF', fontWeight: '500', cursor: 'pointer', fontSize: '13px', color: '#B8956A' }}
-  >
-    📋 复制名称，手动搜索
-  </button>
+              onClick={() => {
+                navigator.clipboard.writeText(selectedFood);
+                alert(`已复制「${selectedFood}」到剪贴板，可打开外卖App手动搜索`);
+              }} 
+              style={{ padding: '12px', borderRadius: '48px', border: '1px solid #E8D5B5', background: '#FFFFFF', fontWeight: '500', cursor: 'pointer', fontSize: '13px', color: '#B8956A' }}
+            >
+              📋 复制名称，手动搜索
+            </button>
             <button 
               onClick={() => setShowCard(false)} 
               style={{ padding: '10px', borderRadius: '48px', border: 'none', background: 'transparent', color: '#B8A088', cursor: 'pointer', fontSize: '13px' }}
