@@ -31,7 +31,7 @@ const foodImageDatabase: Record<string, string> = {
   "关东煮":"food/guandongzhu.png",
   "粥":"food/zhou.png",
   "馄饨":"food/huntun.png",
-  "饺子":"food/jiaoi.png"
+  "饺子":"food/jiaozi.png"
 
 };
 
