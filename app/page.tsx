@@ -114,7 +114,8 @@ export default function FateFood() {
   }, []);
 
   const getDeliveryUrl = (food: string) => {
-    return `https://i.meituan.com/s/?w=${encodeURIComponent(food)}`;
+    // 使用美团主站搜索，更稳定
+    return `https://www.meituan.com/s?w=${encodeURIComponent(food)}`;
   };
 
   const getFilteredOptions = () => {
@@ -349,37 +350,40 @@ export default function FateFood() {
             boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
             border: '3px solid #E8D5B5'
           }}>
-            {currentOptions.map((option, i) => {
-              const count = currentOptions.length;
-              const angle = 360 / count;
-              return (
-                <div key={i} style={{
-                  position: 'absolute',
-                  width: '50%',
-                  height: '50%',
-                  left: '50%',
-                  top: '50%',
-                  transformOrigin: '0% 0%',
-                  transform: `rotate(${i * angle}deg)`,
-                  background: colors[i % colors.length],
-                  clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%, 0% 100%)'
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    left: '35%',
-                    top: '20%',
-                    transform: `rotate(${angle / 2}deg)`,
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    color: '#A0784A',
-                    whiteSpace: 'nowrap',
-                    textShadow: '0 1px 0 rgba(255,255,255,0.5)'
-                  }}>
-                    {option}
-                  </div>
-                </div>
-              );
-            })}
+        {currentOptions.map((option, i) => {
+  const count = currentOptions.length;
+  const angle = 360 / count;
+  // 关键修复：每个扇区的文字应该旋转到扇区中间，而不是固定角度
+  const textRotate = i * angle + angle / 2;
+  
+  return (
+    <div key={i} style={{
+      position: 'absolute',
+      width: '50%',
+      height: '50%',
+      left: '50%',
+      top: '50%',
+      transformOrigin: '0% 0%',
+      transform: `rotate(${i * angle}deg)`,
+      background: colors[i % colors.length],
+      clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%, 0% 100%)'
+    }}>
+      <div style={{
+        position: 'absolute',
+        left: '55%',      // 调整文字位置
+        top: '25%',
+        transform: `rotate(${textRotate}deg)`,  // 改为动态旋转
+        fontSize: '11px',
+        fontWeight: '600',
+        color: '#A0784A',
+        whiteSpace: 'nowrap',
+        textShadow: '0 1px 0 rgba(255,255,255,0.5)'
+      }}>
+        {option}
+      </div>
+    </div>
+  );
+})}
           </div>
         </div>
       </div>
