@@ -26,7 +26,13 @@ const foodImageDatabase: Record<string, string> = {
   "烤鱼": "/food/kaoyu.png",
   "砂锅": "/food/shaguo.png",
   "咖喱饭": "/food/galifan.png",
-  "拉面": "/food/lamian.png"
+  "拉面": "/food/lamian.png",
+  "泡面":"/food/paomian.png",
+  "关东煮":"food/guandongzhu.png",
+  "粥":"food/zhou.png",
+  "馄饨":"food/huntun.png",
+  "饺子":"food/jiaoi.png"
+
 };
 
 // 食物配置
