@@ -243,6 +243,20 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
     setCustomBlacklist(newCustomList);
     localStorage.setItem('customBlacklist', JSON.stringify(newCustomList));
   };
+  
+  const resetDaily = () => {
+    const today = new Date().toDateString();
+    const newRemaining = { brk: 2, lun: 2, din: 2, night: 2 };
+    setRemainingSpins(newRemaining);
+    setBlindBoxRemaining(3);
+    setCooldown(0);
+    (['brk', 'lun', 'din', 'night'] as MealType[]).forEach(m => {
+      localStorage.setItem(getMealRemainingKey(m), '2');
+      localStorage.setItem(getMealDateKey(m), today);
+    });
+    localStorage.setItem('blindBox_remaining', '3');
+    localStorage.setItem('blindBox_date', today);
+  };
   // 获取当前选项用于转盘显示
   const currentOptions = getFilteredOptions();
   const colors = ['#FFF5E6', '#FFF0E0', '#FFEDD5', '#FFE8CC', '#FFE5C5', '#FFE2BF', '#FFDEB8', '#FFDBB2'];
