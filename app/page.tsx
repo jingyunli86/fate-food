@@ -401,10 +401,10 @@ if (savedCustomBlacklist) setCustomBlacklist(JSON.parse(savedCustomBlacklist));
     }}>
       <div style={{
         position: 'absolute',
-        left: '55%',      // 调整文字位置
-        top: '25%',
+        left: '60%',      // 调整文字位置
+        top: '20%',
         transform: `rotate(${textRotate}deg)`,  // 改为动态旋转
-        fontSize: '11px',
+        fontSize: '10px',
         fontWeight: '600',
         color: '#A0784A',
         whiteSpace: 'nowrap',
