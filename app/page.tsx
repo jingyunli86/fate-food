@@ -506,6 +506,16 @@ export default function FateFood() {
               🍔 去美团下单
             </button>
             <button 
+    onClick={() => {
+      // 复制食物名称到剪贴板
+      navigator.clipboard.writeText(selectedFood);
+      alert(`已复制「${selectedFood}」到剪贴板，可打开外卖App手动搜索`);
+    }} 
+    style={{ padding: '12px', borderRadius: '48px', border: '1px solid #E8D5B5', background: '#FFFFFF', fontWeight: '500', cursor: 'pointer', fontSize: '13px', color: '#B8956A' }}
+  >
+    📋 复制名称，手动搜索
+  </button>
+            <button 
               onClick={() => setShowCard(false)} 
               style={{ padding: '10px', borderRadius: '48px', border: 'none', background: 'transparent', color: '#B8A088', cursor: 'pointer', fontSize: '13px' }}
             >
