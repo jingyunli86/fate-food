@@ -674,29 +674,36 @@ export default function FateFood() {
             onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200"; }}
           />
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <button 
-              onClick={() => window.open(getDeliveryUrl(selectedFood), '_blank')} 
-              style={{ padding: '14px', borderRadius: '48px', border: 'none', background: '#F5E6D3', fontWeight: '600', cursor: 'pointer', fontSize: '15px', color: '#C47A2E' }}
-            >
-              🍔 去美团下单
-            </button>
-            <button 
-              onClick={() => {
-                navigator.clipboard.writeText(selectedFood);
-                alert(`已复制「${selectedFood}」到剪贴板，可打开外卖App手动搜索`);
-              }} 
-              style={{ padding: '12px', borderRadius: '48px', border: '1px solid #E8D5B5', background: '#FFFFFF', fontWeight: '500', cursor: 'pointer', fontSize: '13px', color: '#B8956A' }}
-            >
-              📋 复制名称，手动搜索
-            </button>
-            <button 
-              onClick={() => setShowCard(false)} 
-              style={{ padding: '10px', borderRadius: '48px', border: 'none', background: 'transparent', color: '#B8A088', cursor: 'pointer', fontSize: '13px' }}
-            >
-              收起
-            </button>
-          </div>
+         <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+  <button 
+    onClick={() => {
+      const food = selectedFood;
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        window.location.href = `meituanwaimai://search?keyword=${encodeURIComponent(food)}`;
+        setTimeout(() => { window.location.href = 'https://m.meituan.com'; }, 2000);
+      } else {
+        window.open(`https://www.meituan.com/s?w=${encodeURIComponent(food)}`, '_blank');
+      }
+    }} 
+    style={{ flex: 1, padding: '12px', borderRadius: '48px', border: 'none', background: '#F5E6D3', fontWeight: '600', fontSize: '14px', color: '#C47A2E' }}
+  >
+    🍔 美团
+  </button>
+  <button 
+    onClick={() => {
+      const food = selectedFood;
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        window.location.href = `eleme://search?keyword=${encodeURIComponent(food)}`;
+        setTimeout(() => { window.location.href = 'https://h5.ele.me'; }, 2000);
+      } else {
+        window.open(`https://www.ele.me/search?keyword=${encodeURIComponent(food)}`, '_blank');
+      }
+    }} 
+    style={{ flex: 1, padding: '12px', borderRadius: '48px', border: 'none', background: '#E8F5E9', fontWeight: '600', fontSize: '14px', color: '#4CAF50' }}
+  >
+    🛵 饿了么
+  </button>
+</div>
         </div>
       )}
 
