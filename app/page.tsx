@@ -661,53 +661,122 @@ export default function FateFood() {
         </div>
       )}
 
+     
       {/* 结果卡片 */}
-      {showCard && (
-        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#FFFFFF', borderRadius: '48px', padding: '32px 24px', boxShadow: '0 30px 50px rgba(0,0,0,0.2)', zIndex: 1000, width: '320px', textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎉</div>
-          <h3 style={{ color: '#B8956A', marginBottom: '8px', fontSize: '14px' }}>命运决定：</h3>
-          <h2 style={{ fontSize: '28px', color: '#C47A2E', marginBottom: '16px' }}>{selectedFood}</h2>
-          <img 
-            src={scratchImage} 
-            alt={selectedFood} 
-            style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '60px', margin: '0 auto 20px', border: '4px solid #F0E4D0' }}
-            onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200"; }}
-          />
-          
-         <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-  <button 
-    onClick={() => {
-      const food = selectedFood;
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        window.location.href = `meituanwaimai://search?keyword=${encodeURIComponent(food)}`;
-        setTimeout(() => { window.location.href = 'https://m.meituan.com'; }, 2000);
-      } else {
-        window.open(`https://www.meituan.com/s?w=${encodeURIComponent(food)}`, '_blank');
-      }
-    }} 
-    style={{ flex: 1, padding: '12px', borderRadius: '48px', border: 'none', background: '#F5E6D3', fontWeight: '600', fontSize: '14px', color: '#C47A2E' }}
-  >
-    🍔 美团
-  </button>
-  <button 
-    onClick={() => {
-      const food = selectedFood;
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        window.location.href = `eleme://search?keyword=${encodeURIComponent(food)}`;
-        setTimeout(() => { window.location.href = 'https://h5.ele.me'; }, 2000);
-      } else {
-        window.open(`https://www.ele.me/search?keyword=${encodeURIComponent(food)}`, '_blank');
-      }
-    }} 
-    style={{ flex: 1, padding: '12px', borderRadius: '48px', border: 'none', background: '#E8F5E9', fontWeight: '600', fontSize: '14px', color: '#4CAF50' }}
-  >
-    🛵 饿了么
-  </button>
-</div>
-        </div>
-      )}
-
-      {/* 成就 */}
+{showCard && (
+  <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#FFFFFF', borderRadius: '48px', padding: '24px 20px', boxShadow: '0 30px 50px rgba(0,0,0,0.2)', zIndex: 1000, width: '340px', textAlign: 'center' }}>
+    <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎉</div>
+    <h3 style={{ color: '#B8956A', marginBottom: '8px', fontSize: '14px' }}>命运决定：</h3>
+    <h2 style={{ fontSize: '28px', color: '#C47A2E', marginBottom: '12px' }}>{selectedFood}</h2>
+    <img 
+      src={scratchImage} 
+      alt={selectedFood} 
+      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50px', margin: '0 auto 16px', border: '4px solid #F0E4D0' }}
+      onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200"; }}
+    />
+    
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* 双平台并排按钮 */}
+      <div style={{ display: 'flex', gap: '12px' }}>
+        {/* 美团按钮 - 直接唤起App */}
+        <button 
+          onClick={() => {
+            const food = selectedFood;
+            // 先复制食物名称到剪贴板
+            navigator.clipboard.writeText(food);
+            
+            // 检测是否为手机
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+              // 美团外卖URL Scheme（直接搜索）
+              const meituanScheme = `meituanwaimai://search?keyword=${encodeURIComponent(food)}`;
+              const meituanFallback = `meituan://www.meituan.com/search?keyword=${encodeURIComponent(food)}`;
+              
+              // 尝试唤起美团App
+              window.location.href = meituanScheme;
+              
+              // 2秒后如果还在页面，尝试备用scheme或跳转下载页
+              setTimeout(() => {
+                window.location.href = meituanFallback;
+              }, 1500);
+              
+              setTimeout(() => {
+                window.location.href = 'https://m.meituan.com';
+              }, 3000);
+            } else {
+              window.open(`https://www.meituan.com/s?w=${encodeURIComponent(food)}`, '_blank');
+            }
+            
+            // 提示已复制
+            alert(`已复制「${food}」到剪贴板，正在打开美团...`);
+          }} 
+          style={{ flex: 1, padding: '12px 0', borderRadius: '48px', border: 'none', background: '#F5E6D3', fontWeight: '600', cursor: 'pointer', fontSize: '14px', color: '#C47A2E' }}
+        >
+          🍔 美团
+        </button>
+        
+        {/* 淘宝/饿了么按钮 - 直接唤起淘宝App */}
+        <button 
+          onClick={() => {
+            const food = selectedFood;
+            // 先复制食物名称到剪贴板
+            navigator.clipboard.writeText(food);
+            
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+              // 淘宝URL Scheme（直接搜索）
+              const taobaoScheme = `tbopen://m.taobao.com/tbopen/index.html?h5Url=https://s.taobao.com/search?q=${encodeURIComponent(food)}`;
+              const elemeScheme = `eleme://search?keyword=${encodeURIComponent(food)}`;
+              
+              // 尝试唤起淘宝/饿了么
+              window.location.href = taobaoScheme;
+              
+              // 1.5秒后尝试饿了么
+              setTimeout(() => {
+                window.location.href = elemeScheme;
+              }, 1500);
+              
+              // 3秒后跳转网页版
+              setTimeout(() => {
+                window.location.href = `https://s.taobao.com/search?q=${encodeURIComponent(food)}`;
+              }, 3000);
+            } else {
+              window.open(`https://s.taobao.com/search?q=${encodeURIComponent(food)}`, '_blank');
+            }
+            
+            alert(`已复制「${food}」到剪贴板，正在打开淘宝...`);
+          }} 
+          style={{ flex: 1, padding: '12px 0', borderRadius: '48px', border: 'none', background: '#E8F5E9', fontWeight: '600', cursor: 'pointer', fontSize: '14px', color: '#4CAF50' }}
+        >
+          🛵 饿了么/淘宝
+        </button>
+      </div>
+      
+      {/* 复制名称按钮 */}
+      <button 
+        onClick={() => {
+          navigator.clipboard.writeText(selectedFood);
+          alert(`已复制「${selectedFood}」到剪贴板，可打开外卖App手动搜索`);
+        }} 
+        style={{ padding: '12px', borderRadius: '48px', border: '1px solid #E8D5B5', background: '#FFFFFF', fontWeight: '500', cursor: 'pointer', fontSize: '13px', color: '#B8956A' }}
+      >
+        📋 复制名称
+      </button>
+      
+      {/* 收起按钮 */}
+      <button 
+        onClick={() => setShowCard(false)} 
+        style={{ padding: '12px', borderRadius: '48px', border: 'none', background: 'transparent', color: '#B8A088', cursor: 'pointer', fontSize: '13px' }}
+      >
+        收起
+      </button>
+    </div>
+    </div>
+    )
+    }
+     {/* 成就 */}
       {achievements.length > 0 && (
         <div style={{ position: 'fixed', bottom: '20px', left: '20px', background: '#FFFFFF', padding: '8px 18px', borderRadius: '40px', fontSize: '12px', color: '#C47A2E', fontWeight: '500', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', border: '1px solid #F0E4D0' }}>
           {achievements.join(' ')}
