@@ -27,12 +27,11 @@ const foodImageDatabase: Record<string, string> = {
   "砂锅": "/food/shaguo.png",
   "咖喱饭": "/food/galifan.png",
   "拉面": "/food/lamian.png",
-  "泡面":"/food/paomian.png",
-  "关东煮":"food/guandongzhu.png",
-  "粥":"food/zhou.png",
-  "馄饨":"food/huntun.png",
-  "饺子":"food/jiaozi.png"
-
+  "泡面": "/food/paomian.png",
+  "关东煮": "/food/guandongzhu.png",
+  "粥": "/food/zhou.png",
+  "馄饨": "/food/huntun.png",
+  "饺子": "/food/jiaozi.png"
 };
 
 // 食物配置
@@ -200,10 +199,6 @@ export default function FateFood() {
     }
   }, []);
 
-  const getDeliveryUrl = (food: string) => {
-    return `https://www.meituan.com/s?w=${encodeURIComponent(food)}`;
-  };
-
   const spin = () => {
     if (isSpinning) return;
     if (cooldown > 0) return;
@@ -325,6 +320,20 @@ export default function FateFood() {
     localStorage.setItem('blindBox_date', today);
   };
 
+  // 复制文本的兼容函数
+  const copyToClipboard = (text: string) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+  };
+
   return (
     <div style={{ 
       minHeight: '100vh',
@@ -394,7 +403,7 @@ export default function FateFood() {
         {cooldown > 0 ? `⏳ 冷却中 ${cooldown}秒` : '转动转盘，接受命运的安排'}
       </p>
 
-      {/* 转盘区域 - Canvas版本 */}
+      {/* 转盘区域 */}
       <div style={{
         background: '#FFFFFF',
         borderRadius: '48px',
@@ -405,7 +414,6 @@ export default function FateFood() {
         border: '1px solid #F0E4D0'
       }}>
         <div style={{ position: 'relative', width: '280px', height: '280px', margin: '0 auto' }}>
-          {/* 顶部指针 */}
           <div style={{ 
             position: 'absolute', 
             top: '-30px', 
@@ -431,7 +439,6 @@ export default function FateFood() {
             zIndex: 11
           }} />
           
-          {/* Canvas转盘 */}
           <canvas
             id="wheelCanvas"
             width="280"
@@ -488,7 +495,7 @@ export default function FateFood() {
         </button>
       </div>
 
-      {/* 黑名单 - 增强版 */}
+      {/* 黑名单区域 - 保持原有代码不变 */}
       <div style={{
         background: '#FFFFFF',
         borderRadius: '32px',
@@ -501,7 +508,6 @@ export default function FateFood() {
           🚫 不想吃什么？点一下屏蔽（食材可多选）
         </p>
         
-        {/* 预设标签 */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ fontSize: '12px', color: '#C47A2E', marginBottom: '8px' }}>📌 常见忌口</div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -518,7 +524,6 @@ export default function FateFood() {
                   fontSize: '12px',
                   cursor: 'pointer',
                   fontWeight: '500',
-                  transition: 'all 0.2s'
                 }}
               >
                 {blacklist.includes(food) ? `✓ ${food}` : food}
@@ -527,7 +532,6 @@ export default function FateFood() {
           </div>
         </div>
         
-        {/* 当前时段食物屏蔽 */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ fontSize: '12px', color: '#C47A2E', marginBottom: '8px' }}>
             🍽️ 当前{config[meal].name}选项
@@ -554,42 +558,17 @@ export default function FateFood() {
           </div>
         </div>
         
-        {/* 自定义黑名单 */}
         <div style={{ borderTop: '1px dashed #F0E4D0', paddingTop: '12px' }}>
           <div style={{ fontSize: '12px', color: '#C47A2E', marginBottom: '8px' }}>
-            ✏️ 自定义屏蔽（输入后永久屏蔽）
+            ✏️ 自定义屏蔽
           </div>
           
           {customBlacklist.length > 0 && (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
               {customBlacklist.map(item => (
-                <span
-                  key={item}
-                  style={{
-                    background: '#E8D5B5',
-                    padding: '4px 12px',
-                    borderRadius: '40px',
-                    fontSize: '12px',
-                    color: '#A0784A',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
+                <span key={item} style={{ background: '#E8D5B5', padding: '4px 12px', borderRadius: '40px', fontSize: '12px', color: '#A0784A', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   🚫 {item}
-                  <button
-                    onClick={() => removeCustomBlacklist(item)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      color: '#A0784A',
-                      padding: '0 4px'
-                    }}
-                  >
-                    ✕
-                  </button>
+                  <button onClick={() => removeCustomBlacklist(item)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#A0784A' }}>✕</button>
                 </span>
               ))}
             </div>
@@ -602,48 +581,21 @@ export default function FateFood() {
               onChange={(e) => setNewBlacklistItem(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && addCustomBlacklist()}
               placeholder="输入要屏蔽的食物，如：苦瓜"
-              style={{
-                flex: 1,
-                padding: '10px 14px',
-                borderRadius: '40px',
-                border: '1px solid #F0E4D0',
-                background: '#FFFCF8',
-                fontSize: '13px',
-                outline: 'none',
-                fontFamily: 'inherit'
-              }}
+              style={{ flex: 1, padding: '10px 14px', borderRadius: '40px', border: '1px solid #F0E4D0', background: '#FFFCF8', fontSize: '13px', outline: 'none' }}
             />
-            <button
-              onClick={addCustomBlacklist}
-              style={{
-                padding: '8px 20px',
-                borderRadius: '40px',
-                border: 'none',
-                background: '#F5E6D3',
-                color: '#C47A2E',
-                fontWeight: '500',
-                cursor: 'pointer',
-                fontSize: '13px'
-              }}
-            >
-              添加
-            </button>
+            <button onClick={addCustomBlacklist} style={{ padding: '8px 20px', borderRadius: '40px', border: 'none', background: '#F5E6D3', color: '#C47A2E', fontWeight: '500', cursor: 'pointer' }}>添加</button>
           </div>
-          <p style={{ fontSize: '11px', color: '#B8A088', marginTop: '8px' }}>
-            💡 提示：自定义屏蔽会全局生效，可点击 ✕ 移除
-          </p>
+          <p style={{ fontSize: '11px', color: '#B8A088', marginTop: '8px' }}>💡 自定义屏蔽会全局生效，可点击 ✕ 移除</p>
         </div>
       </div>
 
       {/* 心理契约弹窗 */}
       {showPromise && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#FFFFFF', borderRadius: '48px', padding: '32px 28px', textAlign: 'center', width: '280px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>📜</div>
-            <h3 style={{ color: '#C47A2E', marginBottom: '16px' }}>命运契约</h3>
-            <p style={{ color: '#8B7355', marginBottom: '24px', fontSize: '14px', lineHeight: 1.5 }}>
-              我承诺：无论抽中什么，<br/>我都接受命运的安排！
-            </p>
+          <div style={{ background: '#FFFFFF', borderRadius: '48px', padding: '32px 28px', textAlign: 'center', width: '280px' }}>
+            <div style={{ fontSize: '48px' }}>📜</div>
+            <h3 style={{ color: '#C47A2E' }}>命运契约</h3>
+            <p style={{ color: '#8B7355', margin: '16px 0' }}>我承诺：无论抽中什么，<br/>我都接受命运的安排！</p>
             <button onClick={confirmSpin} style={{ padding: '12px 32px', background: '#F5E6D3', border: 'none', borderRadius: '40px', fontWeight: '600', color: '#C47A2E', cursor: 'pointer' }}>✅ 我接受</button>
           </div>
         </div>
@@ -652,126 +604,100 @@ export default function FateFood() {
       {/* 盲盒弹窗 */}
       {showBlindBox && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#FFFFFF', borderRadius: '48px', padding: '32px 28px', textAlign: 'center', width: '280px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
-            <div style={{ fontSize: '56px', marginBottom: '12px' }}>🎁</div>
+          <div style={{ background: '#FFFFFF', borderRadius: '48px', padding: '32px 28px', textAlign: 'center', width: '280px' }}>
+            <div style={{ fontSize: '56px' }}>🎁</div>
             <h3 style={{ color: '#C47A2E' }}>盲盒惊喜</h3>
-            <p style={{ color: '#8B7355', margin: '16px 0', fontSize: '13px' }}>剩余 {blindBoxRemaining}/3 次</p>
+            <p style={{ color: '#8B7355', margin: '16px 0' }}>剩余 {blindBoxRemaining}/3 次</p>
             <button onClick={confirmBlindBox} style={{ padding: '12px 32px', background: '#F5E6D3', border: 'none', borderRadius: '40px', fontWeight: '600', color: '#C47A2E', cursor: 'pointer' }}>✨ 开启 ✨</button>
           </div>
         </div>
       )}
 
-     
-      {/* 结果卡片 */}
-{showCard && (
-  <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#FFFFFF', borderRadius: '48px', padding: '24px 20px', boxShadow: '0 30px 50px rgba(0,0,0,0.2)', zIndex: 1000, width: '340px', textAlign: 'center' }}>
-    <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎉</div>
-    <h3 style={{ color: '#B8956A', marginBottom: '8px', fontSize: '14px' }}>命运决定：</h3>
-    <h2 style={{ fontSize: '28px', color: '#C47A2E', marginBottom: '12px' }}>{selectedFood}</h2>
-    <img 
-      src={scratchImage} 
-      alt={selectedFood} 
-      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50px', margin: '0 auto 16px', border: '4px solid #F0E4D0' }}
-      onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200"; }}
-    />
-    
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {/* 双平台并排按钮 */}
-      <div style={{ display: 'flex', gap: '12px' }}>
-        {/* 美团按钮 - 直接唤起App */}
-        <button 
-  onClick={() => {
-    const food = selectedFood;
-    // 先复制食物名称
-    navigator.clipboard.writeText(food);
-    
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // 手机端：优先唤起美团App
-      const scheme = `meituanwaimai://search?keyword=${encodeURIComponent(food)}`;
-      const fallbackUrl = `https://waimai.meituan.com/search?keyword=${encodeURIComponent(food)}`;
-      
-      // 尝试唤起App
-      window.location.href = scheme;
-      
-      // 2秒后如果还在页面，说明App未安装或唤起失败，跳转H5版
-      setTimeout(() => {
-        window.location.href = fallbackUrl;
-      }, 2000);
-    } else {
-      // 电脑端：直接跳转网页版
-      window.open(`https://www.meituan.com/s?w=${encodeURIComponent(food)}`, '_blank');
-    }
-    
-    alert(`已复制「${food}」到剪贴板`);
-  }} 
-  style={{ flex: 1, padding: '12px 0', borderRadius: '48px', border: 'none', background: '#F5E6D3', fontWeight: '600', cursor: 'pointer', fontSize: '14px', color: '#C47A2E' }}
->
-  🍔 美团
-</button>
-        
-        {/* 淘宝/饿了么按钮 - 直接唤起淘宝App */}
-        <button 
-          onClick={() => {
-            const food = selectedFood;
-            // 先复制食物名称到剪贴板
-            navigator.clipboard.writeText(food);
+      {/* 结果卡片 - 修复版 */}
+      {showCard && (
+        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#FFFFFF', borderRadius: '48px', padding: '24px 20px', boxShadow: '0 30px 50px rgba(0,0,0,0.2)', zIndex: 1000, width: '340px', textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎉</div>
+          <h3 style={{ color: '#B8956A', marginBottom: '8px', fontSize: '14px' }}>命运决定：</h3>
+          <h2 style={{ fontSize: '28px', color: '#C47A2E', marginBottom: '12px' }}>{selectedFood}</h2>
+          
+          <img 
+            src={scratchImage} 
+            alt={selectedFood} 
+            style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50px', margin: '0 auto 16px', border: '4px solid #F0E4D0' }}
+            onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200"; }}
+          />
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* 美团按钮 - 复制+唤起App */}
+            <button 
+              onClick={() => {
+                const food = selectedFood;
+                copyToClipboard(food);
+                
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                  // 使用美团的通用 scheme
+                  window.location.href = `imeituan://www.meituan.com/s?w=${encodeURIComponent(food)}`;
+                  setTimeout(() => {
+                    alert(`已复制「${food}」，如未自动跳转，请手动打开美团搜索`);
+                  }, 1500);
+                } else {
+                  window.open(`https://www.meituan.com/s?w=${encodeURIComponent(food)}`, '_blank');
+                }
+              }} 
+              style={{ padding: '14px 0', borderRadius: '48px', border: 'none', background: '#FFD000', color: '#222', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}
+            >
+              🍔 复制并去美团搜索
+            </button>
+
+            {/* 淘宝/饿了么按钮 */}
+            <button 
+              onClick={() => {
+                const food = selectedFood;
+                copyToClipboard(food);
+                
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                  window.location.href = `tbopen://m.taobao.com/tbopen/index.html?h5Url=https://s.taobao.com/search?q=${encodeURIComponent(food)}`;
+                  setTimeout(() => {
+                    window.location.href = `https://s.taobao.com/search?q=${encodeURIComponent(food)}`;
+                  }, 2000);
+                } else {
+                  window.open(`https://s.taobao.com/search?q=${encodeURIComponent(food)}`, '_blank');
+                }
+                
+                alert(`已复制「${food}」到剪贴板`);
+              }} 
+              style={{ padding: '14px 0', borderRadius: '48px', border: 'none', background: '#E8F5E9', fontWeight: '600', cursor: 'pointer', fontSize: '15px', color: '#4CAF50' }}
+            >
+              🛵 复制并去淘宝搜索
+            </button>
+
+            {/* 仅复制按钮 */}
+            <button 
+              onClick={() => {
+                copyToClipboard(selectedFood);
+                alert(`已复制「${selectedFood}」到剪贴板`);
+              }} 
+              style={{ padding: '12px', borderRadius: '48px', border: '1px solid #E8D5B5', background: '#FFFFFF', fontWeight: '500', cursor: 'pointer', fontSize: '13px', color: '#B8956A' }}
+            >
+              📋 仅复制名称
+            </button>
             
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
-            if (isMobile) {
-              // 淘宝URL Scheme（直接搜索）
-              const taobaoScheme = `tbopen://m.taobao.com/tbopen/index.html?h5Url=https://s.taobao.com/search?q=${encodeURIComponent(food)}`;
-              const elemeScheme = `eleme://search?keyword=${encodeURIComponent(food)}`;
-              
-              // 尝试唤起淘宝/饿了么
-              window.location.href = taobaoScheme;
-              
-              // 1.5秒后尝试饿了么
-              setTimeout(() => {
-                window.location.href = elemeScheme;
-              }, 1500);
-              
-              // 3秒后跳转网页版
-              setTimeout(() => {
-                window.location.href = `https://s.taobao.com/search?q=${encodeURIComponent(food)}`;
-              }, 3000);
-            } else {
-              window.open(`https://s.taobao.com/search?q=${encodeURIComponent(food)}`, '_blank');
-            }
-            
-            alert(`已复制「${food}」到剪贴板，正在打开淘宝...`);
-          }} 
-          style={{ flex: 1, padding: '12px 0', borderRadius: '48px', border: 'none', background: '#E8F5E9', fontWeight: '600', cursor: 'pointer', fontSize: '14px', color: '#4CAF50' }}
-        >
-          🛵 饿了么/淘宝
-        </button>
-      </div>
-      
-      {/* 复制名称按钮 */}
-      <button 
-        onClick={() => {
-          navigator.clipboard.writeText(selectedFood);
-          alert(`已复制「${selectedFood}」到剪贴板，可打开外卖App手动搜索`);
-        }} 
-        style={{ padding: '12px', borderRadius: '48px', border: '1px solid #E8D5B5', background: '#FFFFFF', fontWeight: '500', cursor: 'pointer', fontSize: '13px', color: '#B8956A' }}
-      >
-        📋 复制名称
-      </button>
-      
-      {/* 收起按钮 */}
-      <button 
-        onClick={() => setShowCard(false)} 
-        style={{ padding: '12px', borderRadius: '48px', border: 'none', background: 'transparent', color: '#B8A088', cursor: 'pointer', fontSize: '13px' }}
-      >
-        收起
-      </button>
-    </div>
-    </div>
-    )
-    }
-     {/* 成就 */}
+            {/* 收起按钮 */}
+            <button 
+              onClick={() => setShowCard(false)} 
+              style={{ padding: '10px', borderRadius: '48px', border: 'none', background: 'transparent', color: '#B8A088', cursor: 'pointer', fontSize: '13px' }}
+            >
+              收起
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 成就 */}
       {achievements.length > 0 && (
         <div style={{ position: 'fixed', bottom: '20px', left: '20px', background: '#FFFFFF', padding: '8px 18px', borderRadius: '40px', fontSize: '12px', color: '#C47A2E', fontWeight: '500', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', border: '1px solid #F0E4D0' }}>
           {achievements.join(' ')}
