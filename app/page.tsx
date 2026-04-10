@@ -680,41 +680,36 @@ export default function FateFood() {
       <div style={{ display: 'flex', gap: '12px' }}>
         {/* 美团按钮 - 直接唤起App */}
         <button 
-          onClick={() => {
-            const food = selectedFood;
-            // 先复制食物名称到剪贴板
-            navigator.clipboard.writeText(food);
-            
-            // 检测是否为手机
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
-            if (isMobile) {
-              // 美团外卖URL Scheme（直接搜索）
-              const meituanScheme = `meituanwaimai://search?keyword=${encodeURIComponent(food)}`;
-              const meituanFallback = `meituan://www.meituan.com/search?keyword=${encodeURIComponent(food)}`;
-              
-              // 尝试唤起美团App
-              window.location.href = meituanScheme;
-              
-              // 2秒后如果还在页面，尝试备用scheme或跳转下载页
-              setTimeout(() => {
-                window.location.href = meituanFallback;
-              }, 1500);
-              
-              setTimeout(() => {
-                window.location.href = 'https://m.meituan.com';
-              }, 3000);
-            } else {
-              window.open(`https://www.meituan.com/s?w=${encodeURIComponent(food)}`, '_blank');
-            }
-            
-            // 提示已复制
-            alert(`已复制「${food}」到剪贴板，正在打开美团...`);
-          }} 
-          style={{ flex: 1, padding: '12px 0', borderRadius: '48px', border: 'none', background: '#F5E6D3', fontWeight: '600', cursor: 'pointer', fontSize: '14px', color: '#C47A2E' }}
-        >
-          🍔 美团
-        </button>
+  onClick={() => {
+    const food = selectedFood;
+    // 先复制食物名称
+    navigator.clipboard.writeText(food);
+    
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // 手机端：优先唤起美团App
+      const scheme = `meituanwaimai://search?keyword=${encodeURIComponent(food)}`;
+      const fallbackUrl = `https://waimai.meituan.com/search?keyword=${encodeURIComponent(food)}`;
+      
+      // 尝试唤起App
+      window.location.href = scheme;
+      
+      // 2秒后如果还在页面，说明App未安装或唤起失败，跳转H5版
+      setTimeout(() => {
+        window.location.href = fallbackUrl;
+      }, 2000);
+    } else {
+      // 电脑端：直接跳转网页版
+      window.open(`https://www.meituan.com/s?w=${encodeURIComponent(food)}`, '_blank');
+    }
+    
+    alert(`已复制「${food}」到剪贴板`);
+  }} 
+  style={{ flex: 1, padding: '12px 0', borderRadius: '48px', border: 'none', background: '#F5E6D3', fontWeight: '600', cursor: 'pointer', fontSize: '14px', color: '#C47A2E' }}
+>
+  🍔 美团
+</button>
         
         {/* 淘宝/饿了么按钮 - 直接唤起淘宝App */}
         <button 
