@@ -322,15 +322,19 @@ export default function FateFood() {
 
   // 复制文本的兼容函数
   const copyToClipboard = (text: string) => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text);
-    } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+    } catch (err) {
+      console.error('复制失败:', err);
     }
   };
 
@@ -495,7 +499,7 @@ export default function FateFood() {
         </button>
       </div>
 
-      {/* 黑名单区域 - 保持原有代码不变 */}
+      {/* 黑名单区域 */}
       <div style={{
         background: '#FFFFFF',
         borderRadius: '32px',
@@ -613,7 +617,7 @@ export default function FateFood() {
         </div>
       )}
 
-      {/* 结果卡片 - 修复版 */}
+      {/* 结果卡片 */}
       {showCard && (
         <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#FFFFFF', borderRadius: '48px', padding: '24px 20px', boxShadow: '0 30px 50px rgba(0,0,0,0.2)', zIndex: 1000, width: '340px', textAlign: 'center' }}>
           <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎉</div>
@@ -628,7 +632,7 @@ export default function FateFood() {
           />
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* 美团按钮 - 复制+唤起App */}
+            {/* 美团按钮 */}
             <button 
               onClick={() => {
                 const food = selectedFood;
@@ -637,10 +641,15 @@ export default function FateFood() {
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 
                 if (isMobile) {
-                  // 使用美团的通用 scheme
-                  window.location.href = `imeituan://www.meituan.com/s?w=${encodeURIComponent(food)}`;
+                  // 使用 iframe 方式尝试唤起，避免页面跳转导致的重定向循环
+                  const iframe = document.createElement('iframe');
+                  iframe.style.display = 'none';
+                  iframe.src = `imeituan://search?keyword=${encodeURIComponent(food)}`;
+                  document.body.appendChild(iframe);
+                  
                   setTimeout(() => {
-                    alert(`已复制「${food}」，如未自动跳转，请手动打开美团搜索`);
+                    document.body.removeChild(iframe);
+                    alert(`已复制「${food}」，如美团未自动打开，请手动打开App搜索`);
                   }, 1500);
                 } else {
                   window.open(`https://www.meituan.com/s?w=${encodeURIComponent(food)}`, '_blank');
@@ -660,15 +669,18 @@ export default function FateFood() {
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 
                 if (isMobile) {
-                  window.location.href = `tbopen://m.taobao.com/tbopen/index.html?h5Url=https://s.taobao.com/search?q=${encodeURIComponent(food)}`;
+                  const iframe = document.createElement('iframe');
+                  iframe.style.display = 'none';
+                  iframe.src = `tbopen://m.taobao.com/tbopen/index.html?h5Url=https://s.taobao.com/search?q=${encodeURIComponent(food)}`;
+                  document.body.appendChild(iframe);
+                  
                   setTimeout(() => {
-                    window.location.href = `https://s.taobao.com/search?q=${encodeURIComponent(food)}`;
-                  }, 2000);
+                    document.body.removeChild(iframe);
+                    alert(`已复制「${food}」，如淘宝未自动打开，请手动打开App搜索`);
+                  }, 1500);
                 } else {
                   window.open(`https://s.taobao.com/search?q=${encodeURIComponent(food)}`, '_blank');
                 }
-                
-                alert(`已复制「${food}」到剪贴板`);
               }} 
               style={{ padding: '14px 0', borderRadius: '48px', border: 'none', background: '#E8F5E9', fontWeight: '600', cursor: 'pointer', fontSize: '15px', color: '#4CAF50' }}
             >
